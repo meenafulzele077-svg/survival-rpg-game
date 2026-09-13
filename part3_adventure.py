@@ -1,4 +1,69 @@
-package com.example.engine
+import os
+
+# 1. Expand GameData with new Structures, Boss & Dungeon tiles
+game_data_code = """package com.example.model
+
+enum class ItemType(
+    val displayName: String,
+    val icon: String,
+    val category: String,
+    val description: String
+) {
+    WOOD("Wood", "🪵", "Resource", "Chopped from forest trees. Used for building and fires."),
+    STONE("Stone", "🪨", "Resource", "Mined from boulders. Used for sturdy construction."),
+    IRON_ORE("Iron Ore", "⛓️", "Resource", "Mined from glowing mineral veins."),
+    GOLD_COINS("Gold Coins", "🪙", "Currency", "Valuable treasure recovered from ruins."),
+    BERRIES("Wild Berries", "🍒", "Food", "Restores hunger (+15) and health (+5)."),
+    RAW_MEAT("Raw Meat", "🥩", "Food", "Beast meat. Must cook on a campfire!"),
+    COOKED_MEAT("Roasted Steak", "🍖", "Food", "Delicious meal restoring (+50) hunger & (+30) health."),
+    WOOD_AXE("Wood Axe", "🪓", "Tool", "Essential for harvesting timber."),
+    IRON_SWORD("Iron Sword", "⚔️", "Weapon", "High-damage blade against dungeon monsters."),
+    EXCALIBUR("Sun Blade", "🗡️", "Legendary", "Ancient holy sword dealing 85 critical damage!"),
+    CAMPFIRE("Campfire", "🔥", "Building", "Place to illuminate night and cook meat."),
+    WOOD_CABIN("Wood Cabin", "🛖", "Building", "Place to sleep, skip night, and heal."),
+    CHEST("Storage Chest", "📦", "Building", "Place in your camp to store items."),
+    HEALTH_POTION("Health Elixir", "🧪", "Consumable", "Restores 60 Health instantly.")
+}
+
+data class CraftingRecipe(
+    val result: ItemType,
+    val amount: Int,
+    val requirements: Map<ItemType, Int>
+)
+
+val RECIPES = listOf(
+    CraftingRecipe(ItemType.WOOD_AXE, 1, mapOf(ItemType.WOOD to 5, ItemType.STONE to 3)),
+    CraftingRecipe(ItemType.IRON_SWORD, 1, mapOf(ItemType.IRON_ORE to 6, ItemType.WOOD to 4)),
+    CraftingRecipe(ItemType.CAMPFIRE, 1, mapOf(ItemType.WOOD to 6, ItemType.STONE to 4)),
+    CraftingRecipe(ItemType.COOKED_MEAT, 1, mapOf(ItemType.RAW_MEAT to 1, ItemType.WOOD to 1)),
+    CraftingRecipe(ItemType.WOOD_CABIN, 1, mapOf(ItemType.WOOD to 20, ItemType.STONE to 10)),
+    CraftingRecipe(ItemType.CHEST, 1, mapOf(ItemType.WOOD to 12, ItemType.STONE to 4)),
+    CraftingRecipe(ItemType.HEALTH_POTION, 1, mapOf(ItemType.BERRIES to 4, ItemType.IRON_ORE to 1))
+)
+
+data class WorldEntity(
+    val id: Int,
+    var x: Float,
+    var y: Float,
+    val type: String, // "TREE", "ROCK", "BERRY_BUSH", "WOLF", "SKELETON", "BOSS_GOLEM", "CAMPFIRE", "CABIN", "CHEST"
+    var health: Int = 100,
+    val maxHealth: Int = 100
+)
+
+data class Quest(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val reward: String,
+    var isCompleted: Boolean = false
+)
+"""
+
+with open("app/src/main/java/com/example/model/GameData.kt", "w") as f:
+    f.write(game_data_code)
+
+# 2. Update GameEngine with Building Placement, Boss Fight & Rest/Sleep
+engine_code = """package com.example.engine
 
 import androidx.compose.runtime.*
 import com.example.audio.SoundFX
@@ -288,3 +353,96 @@ class GameEngine(var soundFx: SoundFX? = null) {
         inventory[item] = (inventory[item] ?: 0) + qty
     }
 }
+"""
+
+with open("app/src/main/java/com/example/engine/GameEngine.kt", "w") as f:
+    f.write(engine_code)
+
+# 3. Update GameCanvas to draw Skeletons, Boss Golem, Campfires, and Cabins
+with open("app/src/main/java/com/example/ui/GameCanvas.kt", "r") as f:
+    canvas_code = f.read()
+
+# Add Boss and Placed Building drawings
+canvas_enhancement = """
+                "CAMPFIRE" -> {
+                    // Burning Campfire
+                    drawCircle(Color(0xFF424242), 22f, Offset(drawX, drawY + 4f))
+                    drawCircle(Color(0xFFFF9800), 16f, Offset(drawX, drawY - 2f))
+                    drawCircle(Color(0xFFFFEB3B), 9f, Offset(drawX, drawY - 4f))
+                }
+                "CABIN" -> {
+                    // Wood Cabin Shelter
+                    drawRoundRect(Color(0xFF5D4037), Offset(drawX - 35f, drawY - 25f), Size(70f, 50f), CornerRadius(8f, 8f))
+                    drawRoundRect(Color(0xFF795548), Offset(drawX - 30f, drawY - 45f), Size(60f, 25f), CornerRadius(6f, 6f)) // Roof
+                    drawRect(Color(0xFF2E1B0E), Offset(drawX - 10f, drawY), Size(20f, 25f)) // Door
+                }
+                "SKELETON" -> {
+                    // Skeleton Dungeon Guardian
+                    drawCircle(Color(0xFFE0E0E0), 10f, Offset(drawX, drawY - 18f))
+                    drawRoundRect(Color(0xFFBDBDBD), Offset(drawX - 10f, drawY - 8f), Size(20f, 24f), CornerRadius(4f, 4f))
+                    val fill = (e.health.toFloat() / e.maxHealth.toFloat()).coerceIn(0f, 1f)
+                    drawRect(Color.Red, Offset(drawX - 15f, drawY - 32f), Size(30f * fill, 3f))
+                }
+                "BOSS_GOLEM" -> {
+                    // Huge Ancient Stone Golem Boss
+                    drawOval(Color(0x77000000), Offset(drawX - 45f, drawY + 28f), Size(90f, 30f))
+                    drawRoundRect(Color(0xFF455A64), Offset(drawX - 35f, drawY - 35f), Size(70f, 65f), CornerRadius(16f, 16f))
+                    drawCircle(Color(0xFF00E5FF), 5f, Offset(drawX - 12f, drawY - 15f)) // Glowing Cyan Eye
+                    drawCircle(Color(0xFF00E5FF), 5f, Offset(drawX + 12f, drawY - 15f))
+                    // Big Boss Health Bar
+                    drawRoundRect(Color(0xCC000000), Offset(drawX - 50f, drawY - 55f), Size(100f, 10f), CornerRadius(4f, 4f))
+                    val fill = (e.health.toFloat() / e.maxHealth.toFloat()).coerceIn(0f, 1f)
+                    drawRoundRect(Color(0xFFFF1744), Offset(drawX - 50f, drawY - 55f), Size(100f * fill, 10f), CornerRadius(4f, 4f))
+                }
+"""
+
+canvas_code = canvas_code.replace('"CHEST" -> {', canvas_enhancement + '\n                "CHEST" -> {')
+
+with open("app/src/main/java/com/example/ui/GameCanvas.kt", "w") as f:
+    f.write(canvas_code)
+
+# 4. Add Game Over Respawn Screen & Building Placement to MainGameScreen.kt
+with open("app/src/main/java/com/example/ui/MainGameScreen.kt", "r") as f:
+    screen_code = f.read()
+
+# Add Game Over Overlay
+game_over_ui = """
+        // Game Over Respawn Modal
+        if (engine.isGameOver) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xDD000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("💀 YOU PERISHED", color = Color(0xFFFF1744), fontSize = 28.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("The wilderness of Eldoria overcame you...", color = Color.LightGray, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = { engine.respawn() },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                    ) {
+                        Text("Respawn at Camp ⛺", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+"""
+
+screen_code = screen_code.replace(
+    "if (showCrafting) {",
+    game_over_ui + "\n        if (showCrafting) {"
+)
+
+# Update hotbar click so building items place directly into the world
+screen_code = screen_code.replace(
+    'if (item.category == "Food" || item.category == "Consumable") {\\n                                engine.consumeItem(item)\\n                            }',
+    'if (item.category == "Food" || item.category == "Consumable") {\\n                                engine.consumeItem(item)\\n                            } else if (item.category == "Building") {\\n                                engine.placeBuilding(item)\\n                            }'
+)
+
+with open("app/src/main/java/com/example/ui/MainGameScreen.kt", "w") as f:
+    f.write(screen_code)
+
+print("✨ PART 3 ADVENTURE & BOSS OVERHAUL READY!")

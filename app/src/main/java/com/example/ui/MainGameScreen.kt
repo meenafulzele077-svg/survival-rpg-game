@@ -156,6 +156,30 @@ fun MainGameScreen(engine: GameEngine) {
         }
 
         // Crafting Modal
+        
+        // Game Over Respawn Modal
+        if (engine.isGameOver) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xDD000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("💀 YOU PERISHED", color = Color(0xFFFF1744), fontSize = 28.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("The wilderness of Eldoria overcame you...", color = Color.LightGray, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = { engine.respawn() },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                    ) {
+                        Text("Respawn at Camp ⛺", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+
         if (showCrafting) {
             CraftingDialog(engine = engine, onDismiss = { showCrafting = false })
         }
