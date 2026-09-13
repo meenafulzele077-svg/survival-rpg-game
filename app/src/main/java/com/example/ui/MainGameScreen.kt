@@ -228,3 +228,65 @@ fun StatBar(label: String, current: Float, max: Float, color: Color) {
         }
     }
 }
+
+
+@Composable
+fun CraftingDialog(engine: GameEngine, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { Button(onClick = onDismiss) { Text("Close") } },
+        title = { Text("🔨 Workbench & Crafting", color = Color.White) },
+        text = {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(RECIPES) { recipe ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF263238), RoundedCornerShape(8.dp))
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("${recipe.result.icon} ${recipe.result.displayName}", color = Color.White)
+                            val reqString = recipe.requirements.entries.joinToString(", ") { "${it.key.icon} x${it.value}" }
+                            Text(reqString, color = Color.LightGray, fontSize = 12.sp)
+                        }
+                        Button(
+                            onClick = { engine.craft(recipe) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                        ) {
+                            Text("Craft")
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun QuestDialog(engine: GameEngine, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { Button(onClick = onDismiss) { Text("Close") } },
+        title = { Text("📜 Quest Log: Eldoria", color = Color.White) },
+        text = {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(engine.quests) { quest ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF263238), RoundedCornerShape(8.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(quest.title, color = Color(0xFFFFD54F), fontSize = 15.sp)
+                        Text(quest.description, color = Color.White, fontSize = 13.sp)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Reward: ${quest.reward}", color = Color(0xFF81C784), fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    )
+}

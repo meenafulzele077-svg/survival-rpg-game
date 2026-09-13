@@ -11,6 +11,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.engine.GameEngine
+import kotlin.math.hypot
 
 @Composable
 fun MiniMapRadar(
@@ -18,7 +19,7 @@ fun MiniMapRadar(
     modifier: Modifier = Modifier
 ) {
     val mapSize = 90.dp
-    val radarRadius = 1000f // Visibility radius around player
+    val radarRadius = 1000f
 
     Box(
         modifier = modifier
@@ -29,32 +30,31 @@ fun MiniMapRadar(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.width / 2f
+            val px = engine.rawPlayerX
+            val py = engine.rawPlayerY
 
-            // Radar compass background
             drawCircle(Color(0x332E7D32), radius, center)
             drawCircle(Color(0x44FFFFFF), radius * 0.5f, center, style = androidx.compose.ui.graphics.drawscope.Stroke(1f))
 
-            // Draw nearby entities on radar
             for (e in engine.entities) {
-                val dx = e.x - engine.playerX
-                val dy = e.y - engine.playerY
-                val dist = kotlin.math.hypot(dx, dy)
+                val dx = e.x - px
+                val dy = e.y - py
+                val dist = hypot(dx, dy)
                 if (dist < radarRadius) {
                     val mapX = center.x + (dx / radarRadius) * (radius - 8f)
                     val mapY = center.y + (dy / radarRadius) * (radius - 8f)
 
                     val dotColor = when (e.type) {
-                        "WOLF" -> Color.Red
+                        "WOLF", "SKELETON", "BOSS_GOLEM" -> Color.Red
                         "CHEST" -> Color(0xFFFFD54F)
+                        "CABIN", "CAMPFIRE" -> Color(0xFF00E676)
                         "TREE" -> Color(0xFF4CAF50)
-                        "ROCK" -> Color.LightGray
-                        else -> Color(0xFFE91E63)
+                        else -> Color.LightGray
                     }
-                    drawCircle(dotColor, if (e.type == "WOLF" || e.type == "CHEST") 4f else 2.5f, Offset(mapX, mapY))
+                    drawCircle(dotColor, if (e.type == "BOSS_GOLEM") 5.5f else 3f, Offset(mapX, mapY))
                 }
             }
 
-            // Player Dot in Center (Glowing Blue)
             drawCircle(Color.White, 5f, center)
             drawCircle(Color(0xFF00E5FF), 3.5f, center)
         }
