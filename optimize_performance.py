@@ -1,4 +1,7 @@
-package com.example.ui
+import os
+
+# 1. Update GameCanvas with ultra-fast cached drawing & smooth 60fps rendering
+optimized_canvas = """package com.example.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -137,3 +140,39 @@ fun OpenWorldCanvas(engine: GameEngine) {
         if (engine.isAttacking) engine.isAttacking = false
     }
 }
+"""
+
+with open("app/src/main/java/com/example/ui/GameCanvas.kt", "w") as f:
+    f.write(optimized_canvas)
+
+# 2. Add decoupled 60fps tick function to GameEngine.kt
+with open("app/src/main/java/com/example/engine/GameEngine.kt", "r") as f:
+    engine_content = f.read()
+
+# Add tick method for smooth wolf movement and entity lifecycle
+if "fun tick(dt: Float)" not in engine_content:
+    tick_code = """
+    fun tick(dt: Float) {
+        // Smooth Wolf chasing
+        for (i in entities.indices) {
+            val e = entities[i]
+            if (e.type == "WOLF") {
+                val dist = hypot(playerX - e.x, playerY - e.y)
+                if (dist in 40f..300f) {
+                    val angle = atan2(playerY - e.y, playerX - e.x)
+                    entities[i] = e.copy(
+                        x = e.x + cos(angle) * 75f * dt,
+                        y = e.y + sin(angle) * 75f * dt
+                    )
+                } else if (dist < 40f) {
+                    health = (health - 10f * dt).coerceAtLeast(0f)
+                }
+            }
+        }
+    }
+"""
+    engine_content = engine_content.replace("fun updateJoystick(", tick_code + "\n    fun updateJoystick(")
+    with open("app/src/main/java/com/example/engine/GameEngine.kt", "w") as f:
+        f.write(engine_content)
+
+print("Performance optimization script finished!")

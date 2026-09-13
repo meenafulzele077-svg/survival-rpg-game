@@ -65,6 +65,26 @@ class GameEngine(var soundFx: SoundFX? = null) {
         }
     }
 
+    
+    fun tick(dt: Float) {
+        // Smooth Wolf chasing
+        for (i in entities.indices) {
+            val e = entities[i]
+            if (e.type == "WOLF") {
+                val dist = hypot(playerX - e.x, playerY - e.y)
+                if (dist in 40f..300f) {
+                    val angle = atan2(playerY - e.y, playerX - e.x)
+                    entities[i] = e.copy(
+                        x = e.x + cos(angle) * 75f * dt,
+                        y = e.y + sin(angle) * 75f * dt
+                    )
+                } else if (dist < 40f) {
+                    health = (health - 10f * dt).coerceAtLeast(0f)
+                }
+            }
+        }
+    }
+
     fun updateJoystick(deltaX: Float, deltaY: Float) {
         if (deltaX == 0f && deltaY == 0f) {
             isMoving = false
