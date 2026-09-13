@@ -55,28 +55,26 @@ fun GameView() {
                 .background(Color(0xCC000000), RoundedCornerShape(10.dp))
                 .padding(12.dp)
         ) {
-            Text("⚔️ SURVIVAL RPG", color = Color.White, fontSize = 16.sp)
+            Text("SURVIVAL RPG", color = Color.White, fontSize = 16.sp)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("❤️ Health: $health%", color = Color(0xFFFF5252), fontSize = 14.sp)
-            Text("🍖 Hunger: $food%", color = Color(0xFFFFB142), fontSize = 14.sp)
+            Text("Health: $health%", color = Color(0xFFFF5252), fontSize = 14.sp)
+            Text("Hunger: $food%", color = Color(0xFFFFB142), fontSize = 14.sp)
         }
 
-        // D-Pad Controller
         Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(24.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(onClick = { posX -= 20f }) { Text("◀") }
+            Button(onClick = { posX -= 20f }) { Text("<") }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { posY -= 20f }) { Text("▲") }
-                Button(onClick = { posY += 20f }) { Text("▼") }
+                Button(onClick = { posY -= 20f }) { Text("^") }
+                Button(onClick = { posY += 20f }) { Text("v") }
             }
-            Button(onClick = { posX += 20f }) { Text("▶") }
+            Button(onClick = { posX += 20f }) { Text(">") }
         }
 
-        // Action Button
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -86,7 +84,7 @@ fun GameView() {
                 .clickable { if (food > 10) food -= 5 },
             contentAlignment = Alignment.Center
         ) {
-            Text("⚔️", fontSize = 26.sp)
+            Text("ATK", color = Color.White, fontSize = 18.sp)
         }
     }
 }
