@@ -1,4 +1,4 @@
-package com.example.ui
+content = """package com.example.ui
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -161,3 +161,8 @@ fun OpenWorldCanvas(engine: GameEngine) {
         }
     }
 }
+"""
+
+with open("app/src/main/java/com/example/ui/GameCanvas.kt", "w") as f:
+    f.write(content)
+print("GameCanvas updated with HD sprites and atmospheric shaders!")

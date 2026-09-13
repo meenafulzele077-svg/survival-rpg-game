@@ -27,6 +27,8 @@ fun MainGameScreen(engine: GameEngine) {
         // 1. The Living 2D Open World
         OpenWorldCanvas(engine = engine)
 
+        // Radar Mini-Map (Top Right)\n        MiniMapRadar(engine = engine, modifier = Modifier.align(Alignment.TopEnd).padding(top = 16.dp, end = 16.dp))
+
         // 2. Story Dialogue Overlay
         engine.currentDialog?.let { dialogText ->
             Box(
