@@ -22,6 +22,7 @@ import com.example.model.*
 fun MainGameScreen(engine: GameEngine) {
     var showCrafting by remember { mutableStateOf(false) }
     var showQuests by remember { mutableStateOf(false) }
+    var showEquipment by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 1. The Living 2D Open World
@@ -60,7 +61,7 @@ fun MainGameScreen(engine: GameEngine) {
                 .padding(12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("LVL ${engine.level}", color = Color.Yellow, fontSize = 15.sp)
+                Text("LVL ${engine.level} 🛡️", color = Color.Yellow, fontSize = 15.sp, modifier = Modifier.clickable { showEquipment = true })
                 Spacer(modifier = Modifier.width(12.dp))
                 Text("🪙 ${engine.gold}", color = Color(0xFFFFD700), fontSize = 14.sp)
                 Spacer(modifier = Modifier.width(12.dp))
@@ -185,6 +186,9 @@ fun MainGameScreen(engine: GameEngine) {
         }
 
         // Quest Dialog
+        if (showEquipment) {
+            EquipmentDialog(engine = engine, onDismiss = { showEquipment = false })
+        }
         if (showQuests) {
             QuestDialog(engine = engine, onDismiss = { showQuests = false })
         }
